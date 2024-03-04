@@ -111,7 +111,26 @@ private:
 
     void process(const sensor_msgs::msg::LaserScan::SharedPtr &laser_scan, const geometry_msgs::msg::TransformStamped &transform, pcl::PointCloud<pcl::PointXYZRGB> &point_cloud)
     {
-        RCLCPP_INFO(this->get_logger(), "Processing virtual laser cloud");
+        float angle_min = std::min(laser_scan->angle_min, laser_scan->angle_max);
+        float angle_max = std::max(laser_scan->angle_min, laser_scan->angle_max);
+
+        double roll, pitch, yaw;
+        tf2::Quaternion quaternion(transform.transform.rotation.x, transform.transform.rotation.y, transform.transform.rotation.z, transform.transform.rotation.w);
+        tf2::Matrix3x3(quaternion).getRPY(roll, pitch, yaw);
+
+        for (size_t i = 0; i < laser_scan->ranges.size(); i++)
+        {
+            float x_ = laser_scan->ranges[i] * std::cos(angle_min + i * laser_scan->angle_increment);
+            float y_ = laser_scan->ranges[i] * std::sin(angle_min + i * laser_scan->angle_increment);
+            float x = x_ * std::cos(yaw) - y_ * std::sin(yaw) + transform.transform.translation.x;
+            float y = x_ * std::sin(yaw) + y_ * std::cos(yaw) + transform.transform.translation.y;
+            float z = 0;
+            float r = 255;
+            float g = 255;
+            float b = 255;
+
+            point_cloud.points.emplace_back(pcl::PointXYZRGB(x, y, z, r, g, b));
+        }
     }
 
     void publish(pcl::PointCloud<pcl::PointXYZRGB> &point_cloud)
