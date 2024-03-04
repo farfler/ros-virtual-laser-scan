@@ -7,6 +7,7 @@
 #include "sensor_msgs/msg/point_cloud2.hpp"
 #include "tf2_ros/buffer.h"
 #include "tf2_ros/transform_listener.h"
+#include <pcl_conversions/pcl_conversions.h>
 
 class VirtualLaserCloud : public rclcpp::Node
 {
@@ -46,21 +47,76 @@ private:
     void front_left_laser_scan_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg)
     {
         front_left_laser_scan_ = msg;
+        update();
     }
 
     void front_right_laser_scan_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg)
     {
         front_right_laser_scan_ = msg;
+        update();
     }
 
     void rear_left_laser_scan_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg)
     {
         rear_left_laser_scan_ = msg;
+        update();
     }
 
     void rear_right_laser_scan_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg)
     {
         rear_right_laser_scan_ = msg;
+        update();
+    }
+
+    void update()
+    {
+        if (virtual_laser_cloud_frame_id_.empty())
+        {
+            RCLCPP_ERROR(this->get_logger(), "Virtual virtual_laser_cloud_frame_id_ is empty");
+            return;
+        }
+
+        pcl::PointCloud<pcl::PointXYZRGB> point_cloud;
+
+        if (front_left_laser_scan_)
+        {
+            geometry_msgs::msg::TransformStamped front_left_transform = tf_buffer_->lookupTransform(
+                virtual_laser_cloud_frame_id_, front_left_laser_scan_->header.frame_id, rclcpp::Time(0));
+            process(front_left_laser_scan_, front_left_transform, point_cloud);
+        }
+
+        if (front_right_laser_scan_)
+        {
+            geometry_msgs::msg::TransformStamped front_right_transform = tf_buffer_->lookupTransform(
+                virtual_laser_cloud_frame_id_, front_right_laser_scan_->header.frame_id, rclcpp::Time(0));
+            process(front_right_laser_scan_, front_right_transform, point_cloud);
+        }
+
+        if (rear_left_laser_scan_)
+        {
+            geometry_msgs::msg::TransformStamped rear_left_transform = tf_buffer_->lookupTransform(
+                virtual_laser_cloud_frame_id_, rear_left_laser_scan_->header.frame_id, rclcpp::Time(0));
+            process(rear_left_laser_scan_, rear_left_transform, point_cloud);
+        }
+
+        if (rear_right_laser_scan_)
+        {
+            geometry_msgs::msg::TransformStamped rear_right_transform = tf_buffer_->lookupTransform(
+                virtual_laser_cloud_frame_id_, rear_right_laser_scan_->header.frame_id, rclcpp::Time(0));
+            process(rear_right_laser_scan_, rear_right_transform, point_cloud);
+        }
+
+        publish(point_cloud);
+    }
+
+    void process(const sensor_msgs::msg::LaserScan::SharedPtr &laser_scan, const geometry_msgs::msg::TransformStamped &transform, pcl::PointCloud<pcl::PointXYZRGB> &point_cloud)
+    {
+        RCLCPP_INFO(this->get_logger(), "Processing virtual laser cloud");
+    }
+
+    void publish(pcl::PointCloud<pcl::PointXYZRGB> &point_cloud)
+    {
+        RCLCPP_INFO(this->get_logger(), "Publishing virtual laser cloud");
     }
 
     std::string front_left_laser_scan_topic_;
