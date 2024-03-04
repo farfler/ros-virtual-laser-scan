@@ -112,7 +112,6 @@ private:
     void process(const sensor_msgs::msg::LaserScan::SharedPtr &laser_scan, const geometry_msgs::msg::TransformStamped &transform, pcl::PointCloud<pcl::PointXYZRGB> &point_cloud)
     {
         float angle_min = std::min(laser_scan->angle_min, laser_scan->angle_max);
-        float angle_max = std::max(laser_scan->angle_min, laser_scan->angle_max);
 
         double roll, pitch, yaw;
         tf2::Quaternion quaternion(transform.transform.rotation.x, transform.transform.rotation.y, transform.transform.rotation.z, transform.transform.rotation.w);
