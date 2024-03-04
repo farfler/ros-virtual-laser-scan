@@ -10,6 +10,10 @@ find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
+find_package(pcl_conversions REQUIRED)
+
+find_package(PCL REQUIRED)
+include_directories(include ${PCL_INCLUDE_DIRS})
 
 add_executable(virtual_laser_cloud src/virtual_laser_cloud.cpp)
 ament_target_dependencies(virtual_laser_cloud
@@ -17,6 +21,7 @@ ament_target_dependencies(virtual_laser_cloud
   std_msgs
   sensor_msgs
   tf2_ros
+  pcl_conversions
 )
 
 install(
