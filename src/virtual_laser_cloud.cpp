@@ -135,7 +135,14 @@ private:
 
     void publish(pcl::PointCloud<pcl::PointXYZRGB> &point_cloud)
     {
-        RCLCPP_INFO(this->get_logger(), "Publishing virtual laser cloud");
+        sensor_msgs::msg::PointCloud2::SharedPtr virtual_laser_cloud = std::make_shared<sensor_msgs::msg::PointCloud2>();
+        pcl::toROSMsg(point_cloud, *virtual_laser_cloud);
+
+        virtual_laser_cloud->header.frame_id = virtual_laser_cloud_frame_id_;
+        virtual_laser_cloud->header.stamp = now();
+        virtual_laser_cloud->is_dense = false;
+
+        virtual_point_cloud_publisher_->publish(*virtual_laser_cloud);
     }
 
     std::string front_left_laser_scan_topic_;
