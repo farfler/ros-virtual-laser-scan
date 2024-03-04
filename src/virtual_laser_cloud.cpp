@@ -5,6 +5,8 @@
 #include "std_msgs/msg/string.hpp"
 #include "sensor_msgs/msg/laser_scan.hpp"
 #include "sensor_msgs/msg/point_cloud2.hpp"
+#include "tf2_ros/buffer.h"
+#include "tf2_ros/transform_listener.h"
 
 class VirtualLaserCloud : public rclcpp::Node
 {
@@ -33,6 +35,9 @@ public:
             rear_left_laser_scan_topic_, 10, std::bind(&VirtualLaserCloud::rear_left_laser_scan_callback, this, std::placeholders::_1));
         rear_right_laser_scan_subscription_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
             rear_right_laser_scan_topic_, 10, std::bind(&VirtualLaserCloud::rear_right_laser_scan_callback, this, std::placeholders::_1));
+
+        tf_buffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
+        tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
     }
 
 private:
@@ -73,6 +78,9 @@ private:
     sensor_msgs::msg::LaserScan::SharedPtr front_right_laser_scan_;
     sensor_msgs::msg::LaserScan::SharedPtr rear_left_laser_scan_;
     sensor_msgs::msg::LaserScan::SharedPtr rear_right_laser_scan_;
+
+    std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
+    std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
 };
 
 int main(int argc, char *argv[])
