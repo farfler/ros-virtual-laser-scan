@@ -9,12 +9,14 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(tf2_ros REQUIRED)
 
 add_executable(virtual_laser_cloud src/virtual_laser_cloud.cpp)
 ament_target_dependencies(virtual_laser_cloud
   rclcpp
   std_msgs
   sensor_msgs
+  tf2_ros
 )
 
 install(
