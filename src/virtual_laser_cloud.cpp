@@ -36,6 +36,8 @@ public:
         rear_right_laser_scan_subscription_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
             rear_right_laser_scan_topic_, 10, std::bind(&VirtualLaserCloud::rear_right_laser_scan_callback, this, std::placeholders::_1));
 
+        virtual_point_cloud_publisher_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(virtual_laser_cloud_topic_, 10);
+
         tf_buffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
         tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
     }
@@ -73,6 +75,8 @@ private:
     rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr front_right_laser_scan_subscription_;
     rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr rear_left_laser_scan_subscription_;
     rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr rear_right_laser_scan_subscription_;
+
+    rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr virtual_point_cloud_publisher_;
 
     sensor_msgs::msg::LaserScan::SharedPtr front_left_laser_scan_;
     sensor_msgs::msg::LaserScan::SharedPtr front_right_laser_scan_;
