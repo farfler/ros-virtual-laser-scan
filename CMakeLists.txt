@@ -8,9 +8,17 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
-# uncomment the following section in order to fill in
-# further dependencies manually.
-# find_package(<dependency> REQUIRED)
+
+add_executable(virtual_laser_cloud src/virtual_laser_cloud.cpp)
+ament_target_dependencies(virtual_laser_cloud
+  rclcpp
+  std_msgs
+)
+
+install(
+  TARGETS virtual_laser_cloud
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
