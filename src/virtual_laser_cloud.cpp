@@ -23,10 +23,10 @@ public:
         this->declare_parameter<std::string>("rear_right_laser_scan_topic", "rear_right_laser/scan");
         this->get_parameter_or<std::string>("rear_right_laser_scan_topic", rear_right_laser_scan_topic_, "rear_right_laser/scan");
 
-        this->declare_parameter<std::string>("virtual_laser_cloud_topic", "virtual_laser/cloud");
-        this->get_parameter_or<std::string>("virtual_laser_cloud_topic", virtual_laser_cloud_topic_, "virtual_laser/cloud");
-        this->declare_parameter<std::string>("virtual_laser_cloud_frame_id", "virtual_laser_frame");
-        this->get_parameter_or<std::string>("virtual_laser_cloud_frame_id", virtual_laser_cloud_frame_id_, "virtual_laser_frame");
+        this->declare_parameter<std::string>("virtual_point_cloud_topic", "virtual_laser/cloud");
+        this->get_parameter_or<std::string>("virtual_point_cloud_topic", virtual_point_cloud_topic_, "virtual_laser/cloud");
+        this->declare_parameter<std::string>("virtual_point_cloud_frame_id", "virtual_laser_frame");
+        this->get_parameter_or<std::string>("virtual_point_cloud_frame_id", virtual_point_cloud_frame_id_, "virtual_laser_frame");
 
         front_left_laser_scan_subscription_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
             front_left_laser_scan_topic_, 10, std::bind(&VirtualLaserCloud::front_left_laser_scan_callback, this, std::placeholders::_1));
@@ -37,7 +37,7 @@ public:
         rear_right_laser_scan_subscription_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
             rear_right_laser_scan_topic_, 10, std::bind(&VirtualLaserCloud::rear_right_laser_scan_callback, this, std::placeholders::_1));
 
-        virtual_laser_cloud_publisher_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(virtual_laser_cloud_topic_, 10);
+        virtual_point_cloud_publisher_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(virtual_point_cloud_topic_, 10);
 
         tf_buffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
         tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
@@ -70,46 +70,46 @@ private:
 
     void update()
     {
-        if (virtual_laser_cloud_frame_id_.empty())
+        if (virtual_point_cloud_frame_id_.empty())
         {
-            RCLCPP_ERROR(this->get_logger(), "Virtual virtual_laser_cloud_frame_id_ is empty");
+            RCLCPP_ERROR(this->get_logger(), "Virtual virtual_point_cloud_frame_id_ is empty");
             return;
         }
 
-        pcl::PointCloud<pcl::PointXYZRGB> point_cloud;
+        pcl::PointCloud<pcl::PointXYZRGB> virtual_point_cloud;
 
         if (front_left_laser_scan_)
         {
             geometry_msgs::msg::TransformStamped front_left_transform = tf_buffer_->lookupTransform(
-                virtual_laser_cloud_frame_id_, front_left_laser_scan_->header.frame_id, rclcpp::Time(0));
-            process(front_left_laser_scan_, front_left_transform, point_cloud);
+                virtual_point_cloud_frame_id_, front_left_laser_scan_->header.frame_id, rclcpp::Time(0));
+            process(front_left_laser_scan_, front_left_transform, virtual_point_cloud);
         }
 
         if (front_right_laser_scan_)
         {
             geometry_msgs::msg::TransformStamped front_right_transform = tf_buffer_->lookupTransform(
-                virtual_laser_cloud_frame_id_, front_right_laser_scan_->header.frame_id, rclcpp::Time(0));
-            process(front_right_laser_scan_, front_right_transform, point_cloud);
+                virtual_point_cloud_frame_id_, front_right_laser_scan_->header.frame_id, rclcpp::Time(0));
+            process(front_right_laser_scan_, front_right_transform, virtual_point_cloud);
         }
 
         if (rear_left_laser_scan_)
         {
             geometry_msgs::msg::TransformStamped rear_left_transform = tf_buffer_->lookupTransform(
-                virtual_laser_cloud_frame_id_, rear_left_laser_scan_->header.frame_id, rclcpp::Time(0));
-            process(rear_left_laser_scan_, rear_left_transform, point_cloud);
+                virtual_point_cloud_frame_id_, rear_left_laser_scan_->header.frame_id, rclcpp::Time(0));
+            process(rear_left_laser_scan_, rear_left_transform, virtual_point_cloud);
         }
 
         if (rear_right_laser_scan_)
         {
             geometry_msgs::msg::TransformStamped rear_right_transform = tf_buffer_->lookupTransform(
-                virtual_laser_cloud_frame_id_, rear_right_laser_scan_->header.frame_id, rclcpp::Time(0));
-            process(rear_right_laser_scan_, rear_right_transform, point_cloud);
+                virtual_point_cloud_frame_id_, rear_right_laser_scan_->header.frame_id, rclcpp::Time(0));
+            process(rear_right_laser_scan_, rear_right_transform, virtual_point_cloud);
         }
 
-        publish(point_cloud);
+        publish(virtual_point_cloud);
     }
 
-    void process(const sensor_msgs::msg::LaserScan::SharedPtr &laser_scan, const geometry_msgs::msg::TransformStamped &transform, pcl::PointCloud<pcl::PointXYZRGB> &point_cloud)
+    void process(const sensor_msgs::msg::LaserScan::SharedPtr &laser_scan, const geometry_msgs::msg::TransformStamped &transform, pcl::PointCloud<pcl::PointXYZRGB> &virtual_point_cloud)
     {
         float angle_min = std::min(laser_scan->angle_min, laser_scan->angle_max);
 
@@ -128,20 +128,20 @@ private:
             float g = 255;
             float b = 255;
 
-            point_cloud.points.emplace_back(pcl::PointXYZRGB(x, y, z, r, g, b));
+            virtual_point_cloud.points.emplace_back(pcl::PointXYZRGB(x, y, z, r, g, b));
         }
     }
 
-    void publish(pcl::PointCloud<pcl::PointXYZRGB> &point_cloud)
+    void publish(pcl::PointCloud<pcl::PointXYZRGB> &virtual_point_cloud)
     {
-        sensor_msgs::msg::PointCloud2::SharedPtr virtual_laser_cloud = std::make_shared<sensor_msgs::msg::PointCloud2>();
-        pcl::toROSMsg(point_cloud, *virtual_laser_cloud);
+        auto msg = std::make_shared<sensor_msgs::msg::PointCloud2>();
+        pcl::toROSMsg(virtual_point_cloud, *msg);
 
-        virtual_laser_cloud->header.frame_id = virtual_laser_cloud_frame_id_;
-        virtual_laser_cloud->header.stamp = now();
-        virtual_laser_cloud->is_dense = false;
+        msg->header.frame_id = virtual_point_cloud_frame_id_;
+        msg->header.stamp = now();
+        msg->is_dense = false;
 
-        virtual_laser_cloud_publisher_->publish(*virtual_laser_cloud);
+        virtual_point_cloud_publisher_->publish(*msg);
     }
 
     std::string front_left_laser_scan_topic_;
@@ -149,15 +149,15 @@ private:
     std::string rear_left_laser_scan_topic_;
     std::string rear_right_laser_scan_topic_;
 
-    std::string virtual_laser_cloud_topic_;
-    std::string virtual_laser_cloud_frame_id_;
+    std::string virtual_point_cloud_topic_;
+    std::string virtual_point_cloud_frame_id_;
 
     rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr front_left_laser_scan_subscription_;
     rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr front_right_laser_scan_subscription_;
     rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr rear_left_laser_scan_subscription_;
     rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr rear_right_laser_scan_subscription_;
 
-    rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr virtual_laser_cloud_publisher_;
+    rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr virtual_point_cloud_publisher_;
 
     sensor_msgs::msg::LaserScan::SharedPtr front_left_laser_scan_;
     sensor_msgs::msg::LaserScan::SharedPtr front_right_laser_scan_;
