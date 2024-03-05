@@ -123,7 +123,7 @@ private:
             float y_ = laser_scan->ranges[i] * std::sin(angle_min + i * laser_scan->angle_increment);
             float x = x_ * std::cos(yaw) - y_ * std::sin(yaw) + transform.transform.translation.x;
             float y = x_ * std::sin(yaw) + y_ * std::cos(yaw) + transform.transform.translation.y;
-            float z = 0;
+            float z = transform.transform.translation.z;
             float r = 255;
             float g = 255;
             float b = 255;
