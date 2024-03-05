@@ -9,10 +9,10 @@
 #include "tf2_ros/transform_listener.h"
 #include "pcl_conversions/pcl_conversions.h"
 
-class VirtualLaserCloud : public rclcpp::Node
+class VirtualPointCloud : public rclcpp::Node
 {
 public:
-    VirtualLaserCloud() : Node("virtual_laser_cloud")
+    VirtualPointCloud() : Node("virtual_point_cloud")
     {
         this->declare_parameter<std::string>("front_left_laser_scan_topic", "front_left_laser/scan");
         this->get_parameter_or<std::string>("front_left_laser_scan_topic", front_left_laser_scan_topic_, "front_left_laser/scan");
@@ -29,13 +29,13 @@ public:
         this->get_parameter_or<std::string>("virtual_point_cloud_frame_id", virtual_point_cloud_frame_id_, "virtual_laser_frame");
 
         front_left_laser_scan_subscription_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
-            front_left_laser_scan_topic_, 10, std::bind(&VirtualLaserCloud::front_left_laser_scan_callback, this, std::placeholders::_1));
+            front_left_laser_scan_topic_, 10, std::bind(&VirtualPointCloud::front_left_laser_scan_callback, this, std::placeholders::_1));
         front_right_laser_scan_subscription_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
-            front_right_laser_scan_topic_, 10, std::bind(&VirtualLaserCloud::front_right_laser_scan_callback, this, std::placeholders::_1));
+            front_right_laser_scan_topic_, 10, std::bind(&VirtualPointCloud::front_right_laser_scan_callback, this, std::placeholders::_1));
         rear_left_laser_scan_subscription_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
-            rear_left_laser_scan_topic_, 10, std::bind(&VirtualLaserCloud::rear_left_laser_scan_callback, this, std::placeholders::_1));
+            rear_left_laser_scan_topic_, 10, std::bind(&VirtualPointCloud::rear_left_laser_scan_callback, this, std::placeholders::_1));
         rear_right_laser_scan_subscription_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
-            rear_right_laser_scan_topic_, 10, std::bind(&VirtualLaserCloud::rear_right_laser_scan_callback, this, std::placeholders::_1));
+            rear_right_laser_scan_topic_, 10, std::bind(&VirtualPointCloud::rear_right_laser_scan_callback, this, std::placeholders::_1));
 
         virtual_point_cloud_publisher_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(virtual_point_cloud_topic_, 10);
 
@@ -171,7 +171,7 @@ private:
 int main(int argc, char *argv[])
 {
     rclcpp::init(argc, argv);
-    rclcpp::spin(std::make_shared<VirtualLaserCloud>());
+    rclcpp::spin(std::make_shared<VirtualPointCloud>());
     rclcpp::shutdown();
     return 0;
 }

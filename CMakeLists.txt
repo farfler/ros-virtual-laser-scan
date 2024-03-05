@@ -15,8 +15,8 @@ find_package(pcl_conversions REQUIRED)
 find_package(PCL REQUIRED)
 include_directories(include ${PCL_INCLUDE_DIRS})
 
-add_executable(virtual_laser_cloud src/virtual_laser_cloud.cpp)
-ament_target_dependencies(virtual_laser_cloud
+add_executable(virtual_point_cloud src/virtual_point_cloud.cpp)
+ament_target_dependencies(virtual_point_cloud
   rclcpp
   std_msgs
   sensor_msgs
@@ -32,7 +32,7 @@ ament_target_dependencies(virtual_laser_scan
 )
 
 install(
-  TARGETS virtual_laser_cloud virtual_laser_scan
+  TARGETS virtual_point_cloud virtual_laser_scan
   DESTINATION lib/${PROJECT_NAME}
 )
 
