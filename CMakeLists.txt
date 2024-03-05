@@ -23,10 +23,12 @@ ament_target_dependencies(virtual_laser_cloud
   tf2_ros
   pcl_conversions
 )
+
 add_executable(virtual_laser_scan src/virtual_laser_scan.cpp)
 ament_target_dependencies(virtual_laser_scan
   rclcpp
   std_msgs
+  sensor_msgs
 )
 
 install(
