@@ -23,9 +23,14 @@ ament_target_dependencies(virtual_laser_cloud
   tf2_ros
   pcl_conversions
 )
+add_executable(virtual_laser_scan src/virtual_laser_scan.cpp)
+ament_target_dependencies(virtual_laser_scan
+  rclcpp
+  std_msgs
+)
 
 install(
-  TARGETS virtual_laser_cloud
+  TARGETS virtual_laser_cloud virtual_laser_scan
   DESTINATION lib/${PROJECT_NAME}
 )
 
