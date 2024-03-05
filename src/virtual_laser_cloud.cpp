@@ -23,10 +23,10 @@ public:
         this->declare_parameter<std::string>("rear_right_laser_scan_topic", "rear_right_laser/scan");
         this->get_parameter_or<std::string>("rear_right_laser_scan_topic", rear_right_laser_scan_topic_, "rear_right_laser/scan");
 
-        this->declare_parameter<std::string>("virtual_laser_cloud_topic_", "virtual_laser/cloud");
-        this->get_parameter_or<std::string>("virtual_laser_cloud_topic_", virtual_laser_cloud_topic_, "virtual_laser/cloud");
-        this->declare_parameter<std::string>("virtual_laser_cloud_frame_id_", "virtual_laser_frame");
-        this->get_parameter_or<std::string>("virtual_laser_cloud_frame_id_", virtual_laser_cloud_frame_id_, "virtual_laser_frame");
+        this->declare_parameter<std::string>("virtual_laser_cloud_topic", "virtual_laser/cloud");
+        this->get_parameter_or<std::string>("virtual_laser_cloud_topic", virtual_laser_cloud_topic_, "virtual_laser/cloud");
+        this->declare_parameter<std::string>("virtual_laser_cloud_frame_id", "virtual_laser_frame");
+        this->get_parameter_or<std::string>("virtual_laser_cloud_frame_id", virtual_laser_cloud_frame_id_, "virtual_laser_frame");
 
         front_left_laser_scan_subscription_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
             front_left_laser_scan_topic_, 10, std::bind(&VirtualLaserCloud::front_left_laser_scan_callback, this, std::placeholders::_1));
