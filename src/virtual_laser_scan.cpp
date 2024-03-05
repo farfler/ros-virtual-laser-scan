@@ -45,6 +45,80 @@ private:
     void virtual_laser_cloud_callback(const sensor_msgs::msg::PointCloud2::SharedPtr msg)
     {
         virtual_laser_cloud_ = msg;
+        update();
+    }
+
+    void update()
+    {
+        auto virtual_laser_scan = std::make_unique<sensor_msgs::msg::LaserScan>();
+
+        virtual_laser_scan->header.frame_id = virtual_laser_scan_frame_id_;
+        virtual_laser_scan->header.stamp = this->now();
+
+        virtual_laser_scan->angle_min = virtual_laser_scan_angle_min_;
+        virtual_laser_scan->angle_max = virtual_laser_scan_angle_max_;
+        virtual_laser_scan->angle_increment = virtual_laser_scan_angle_increment_;
+        virtual_laser_scan->time_increment = virtual_laser_scan_time_increment_;
+        virtual_laser_scan->scan_time = virtual_laser_scan_scan_time_;
+        virtual_laser_scan->range_min = virtual_laser_scan_range_min_;
+        virtual_laser_scan->range_max = virtual_laser_scan_range_max_;
+
+        uint32_t ranges = std::ceil((virtual_laser_scan->angle_max - virtual_laser_scan->angle_min) / virtual_laser_scan->angle_increment);
+
+        virtual_laser_scan->ranges.assign(ranges, std::numeric_limits<double>::infinity());
+
+        for (sensor_msgs::PointCloud2ConstIterator<float> x(*virtual_laser_cloud_, "x"), y(*virtual_laser_cloud_, "y"), z(*virtual_laser_cloud_, "z"); x != x.end(); ++x, ++y, ++z)
+        {
+
+            if (std::isnan(*x) || std::isnan(*y) || std::isnan(*z))
+            {
+                RCLCPP_DEBUG(
+                    this->get_logger(),
+                    "Ignoring point with NaN in position Point: (%f, %f, %f)",
+                    *x, *y, *z);
+                continue;
+            }
+
+            float range = hypot(*x, *y);
+
+            if (range < virtual_laser_scan_range_min_)
+            {
+                RCLCPP_DEBUG(
+                    this->get_logger(),
+                    "Ignoring point for being too close. Point: (%f, %f, %f) Range: %f, Min Range: %f",
+                    *x, *y, *z, range, virtual_laser_scan_range_min_);
+                continue;
+            }
+
+            if (range > virtual_laser_scan_range_max_)
+            {
+                RCLCPP_DEBUG(
+                    this->get_logger(),
+                    "Ignoring point for being too far away. Point: (%f, %f, %f) Range: %f, Max Range: %f",
+                    *x, *y, *z, range, virtual_laser_scan_range_max_);
+                continue;
+            }
+
+            float angle = atan2(*y, *x);
+
+            if (angle < virtual_laser_scan_angle_min_ || angle > virtual_laser_scan_angle_max_)
+            {
+                RCLCPP_DEBUG(
+                    this->get_logger(),
+                    "Ignoring point for being out of scan range. Point: (%f, %f, %f) Angle: %f, Min Angle: %f, Max Angle: %f",
+                    *x, *y, *z, angle, virtual_laser_scan_angle_min_, virtual_laser_scan_angle_max_);
+                continue;
+            }
+
+            int index = (angle - virtual_laser_scan_angle_min_) / virtual_laser_scan_angle_increment_;
+
+            if (range < virtual_laser_scan->ranges[index])
+            {
+                virtual_laser_scan->ranges[index] = range;
+            }
+        }
+
+        virtual_laser_scan_publisher_->publish(std::move(virtual_laser_scan));
     }
 
     std::string virtual_laser_scan_topic_;
